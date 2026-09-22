@@ -1,68 +1,46 @@
-const handler = async (event, context) => {
-    // 处理 CORS 预检请求
-    if (event.httpMethod === 'OPTIONS') {
-        return {
-            statusCode: 200,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-            },
-            body: '',
-        };
-    }
-
+// netlify/functions/proxy.js
+exports.handler = async function (event) {
+    // 1. 从环境变量获取 Token 和实例地址
     const token = process.env.MASTODON_TOKEN;
-    const instance = process.env.MASTODON_INSTANCE || 'https://mastodon.social';
+    const instance = process.env.MASTODON_INSTANCE || 'https://cmx.go.it'; // 这里改成你的实例地址
 
-    // 从查询参数获取目标路径
-    const path = event.queryStringParameters.path || '';
+    // 2. 解析前端传来的路径，比如 event.path 可能是 /api/proxy?path=timelines/home
+    const queryString = new URLSearchParams(event.queryStringParameters);
+    const targetPath = queryString.get('path');
 
-    if (!path) {
+    if (!targetPath) {
         return {
             statusCode: 400,
             body: JSON.stringify({ error: 'Missing path parameter' }),
         };
     }
 
-    // 构建目标 URL
-    const targetUrl = `instance/api/v1/{path}`;
+    try {
+        // 3. 在服务器端带上 Token 去请求 Mastodon 接口
+        const response = await fetch(`${instance}/api/v1/${targetPath}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
 
-    // 解析查询参数
-    const { path: _, ...queryParams } = event.queryStringParameters || {};
-    const queryString = new URLSearchParams(queryParams).toString();
-    const fullUrl = queryString ? `targetUrl?{queryString}` : targetUrl;
+        // 4. 获取 Mastodon 返回的数据
+        const data = await response.json();
 
-    // 准备请求头
-    const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-    };
-
-    // 转发请求
-    let body;
-    if (['POST', 'PUT', 'PATCH'].includes(event.httpMethod) && event.body) {
-        body = event.body;
+        // 5. 把数据返回给你的前端 App
+        return {
+            statusCode: 200,
+            body: JSON.stringify(data),
+            headers: {
+                'Access-Control-Allow-Origin': '*', // 允许跨域
+                'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+            },
+        };
+    } catch (error) {
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: error.message }),
+        };
     }
-
-    const response = await fetch(fullUrl, {
-        method: event.httpMethod,
-        headers,
-        body,
-    });
-
-    // 读取响应数据
-    const responseData = await response.json().catch(() => null);
-
-    // 返回响应给前端
-    return {
-        statusCode: response.status,
-        headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(responseData),
-    };
 };
-
-exports.handler = handler;
