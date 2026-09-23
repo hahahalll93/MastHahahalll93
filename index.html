@@ -56,19 +56,18 @@
         .today-stats { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #555; background: #f0f1ff; border: 1px solid #dedfff; border-radius: 999px; padding: 4px 12px; white-space: nowrap; }
         .today-stats .num { font-weight: bold; color: #6364ff; font-size: 16px; }
 
-        /* 发布热力图 */
-        .hm { overflow-x: auto; }
-        .hm-months { display: grid; grid-template-columns: repeat(53, 12px); gap: 3px; margin-left: 32px; font-size: 10px; color: #888; height: 14px; white-space: nowrap; }
-        .hm-body { display: flex; gap: 6px; }
-        .hm-days { width: 26px; display: grid; grid-template-rows: repeat(7, 12px); gap: 3px; font-size: 10px; color: #888; text-align: right; line-height: 12px; }
-        .hm-grid { display: grid; grid-template-rows: repeat(7, 12px); grid-auto-flow: column; grid-auto-columns: 12px; gap: 3px; }
+        /* 发布热力图（最近7天，横向） */
+        .hm-week { display: flex; gap: 4px; }
+        .hm-week .hm-day { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: default; }
+        .hm-week .hm-cell { width: 28px; height: 28px; border-radius: 4px; }
+        .hm-week .hm-label { font-size: 11px; color: #888; }
+        .hm-week .hm-label.today { color: #6364ff; font-weight: bold; }
         .hm-cell { width: 12px; height: 12px; border-radius: 2px; background: #eef0f6; }
         .hm-cell.lv1 { background: #d8d9ff; }
         .hm-cell.lv2 { background: #b3b5ff; }
         .hm-cell.lv3 { background: #8b8dff; }
         .hm-cell.lv4 { background: #6a6cff; }
         .hm-cell.lv5 { background: #4849e8; }
-        .hm-cell.empty { background: transparent; }
         .hm-legend { display: flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 11px; color: #888; }
         .heatmap-note { font-size: 12px; color: #888; }
         .heatmap-status { font-size: 12px; color: #888; margin-top: 6px; min-height: 14px; }
@@ -123,17 +122,9 @@
 <div class="card">
     <div class="timeline-header">
         <h2>发布热力图</h2>
-        <span class="heatmap-note">最近一周 · 原创嘟文</span>
+        <span class="heatmap-note">最近7天 · 原创嘟文</span>
     </div>
-    <div class="hm">
-        <div id="heatmap-months" class="hm-months"></div>
-        <div class="hm-body">
-            <div class="hm-days">
-                <span>周一</span><span></span><span>周三</span><span></span><span>周五</span><span></span><span></span>
-            </div>
-            <div id="heatmap-grid" class="hm-grid"></div>
-        </div>
-    </div>
+    <div id="heatmap-grid" class="hm-week"></div>
     <p id="heatmap-status" class="heatmap-status">正在加载热力图…</p>
     <div class="hm-legend">
         <span>少</span>
@@ -432,50 +423,21 @@
 
     function renderHeatmap(daily, start, today, truncated) {
         const gridEl = document.getElementById('heatmap-grid');
-        const monthsEl = document.getElementById('heatmap-months');
-        const totalDays = Math.round((today - start) / 86400000) + 1;
-        const offset = (start.getDay() + 6) % 7; // 周一作为每周第一天
-        const weeks = Math.ceil((offset + totalDays) / 7);
-
-        // 顶部月份标签
-        let monthHtml = '';
-        let prevMonth = -1;
-        for (let w = 0; w < weeks; w++) {
-            const idx = w * 7 - offset;
-            if (idx >= 0 && idx < totalDays) {
-                const d = new Date(start);
-                d.setDate(start.getDate() + idx);
-                const m = d.getMonth();
-                if (m !== prevMonth) {
-                    monthHtml += `<span>${m + 1}月</span>`;
-                    prevMonth = m;
-                } else {
-                    monthHtml += '<span></span>';
-                }
-            } else {
-                monthHtml += '<span></span>';
-            }
-        }
-
-        // 网格：列为周，行为周一~周日
+        // 横向排列：最左为 6 天前，最右为今天
         let gridHtml = '';
-        for (let w = 0; w < weeks; w++) {
-            for (let day = 0; day < 7; day++) {
-                const idx = w * 7 + day - offset;
-                if (idx < 0 || idx >= totalDays) {
-                    gridHtml += '<i class="hm-cell empty"></i>';
-                    continue;
-                }
-                const d = new Date(start);
-                d.setDate(start.getDate() + idx);
-                const key = localDateKey(d);
-                const n = daily[key] || 0;
-                const lv = heatmapCellLevel(n);
-                gridHtml += `<i class="hm-cell lv${lv}" title="${key}：${n} 条"></i>`;
-            }
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(d.getDate() - i);
+            const key = localDateKey(d);
+            const n = daily[key] || 0;
+            const lv = heatmapCellLevel(n);
+            const isToday = i === 0;
+            gridHtml += `
+                <div class="hm-day" title="${key}：${n} 条">
+                    <i class="hm-cell lv${lv}"></i>
+                    <span class="hm-label${isToday ? ' today' : ''}">${d.getMonth() + 1}/${d.getDate()}</span>
+                </div>`;
         }
-
-        monthsEl.innerHTML = monthHtml;
         gridEl.innerHTML = gridHtml;
     }
 
