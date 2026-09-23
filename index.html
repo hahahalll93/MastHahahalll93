@@ -374,9 +374,14 @@
         return map[vis] || vis;
     }
 
+    // 时间线分页状态
+    let tlPage = { maxId: null, loadingMore: false, hasMore: true };
+    let tlSentinel = null;
+
     async function loadTimeline() {
         const timelineList = document.getElementById('timeline-list');
         timelineList.innerHTML = "<div class='loading'><div class='spinner'></div><p>正在加载...</p></div>";
+        tlPage = { maxId: null, loadingMore: false, hasMore: true };
         try {
             const mastodonPath = 'timelines/home?limit=20&min_id=0&since_id=0&id_as_string=true';
             const res = await fetch(`/.netlify/functions/proxy?path=${encodeURIComponent(mastodonPath)}`);
@@ -385,16 +390,66 @@
                 timelineList.innerHTML = '';
                 if (statuses.length === 0) {
                     timelineList.innerHTML = "<p style='color:#888;'>暂无最新嘟文</p>";
+                    tlPage.hasMore = false;
                     return;
                 }
                 statuses.forEach(status => appendStatusItem(timelineList, status));
+                tlPage.maxId = statuses[statuses.length - 1].id;
+                appendTimelineSentinel(timelineList);
             } else {
                 timelineList.innerHTML = "<p style='color:red;'>加载时间线失败。</p>";
+                tlPage.hasMore = false;
             }
         } catch (err) {
             timelineList.innerHTML = "<p style='color:red;'>加载失败。</p>";
+            tlPage.hasMore = false;
         }
     }
+
+    // 滚动到底部时加载更早的嘟文（max_id 翻页）
+    async function loadMoreTimeline() {
+        if (tlPage.loadingMore || !tlPage.hasMore || !tlPage.maxId) return;
+        tlPage.loadingMore = true;
+        const timelineList = document.getElementById('timeline-list');
+        if (tlSentinel) tlSentinel.textContent = '正在加载更多…';
+        try {
+            const path = `timelines/home?limit=20&min_id=0&since_id=0&id_as_string=true&max_id=${tlPage.maxId}`;
+            const res = await fetch(`/.netlify/functions/proxy?path=${encodeURIComponent(path)}`);
+            if (res.ok) {
+                const statuses = await res.json();
+                if (tlSentinel) tlSentinel.remove();
+                if (statuses.length === 0) {
+                    tlPage.hasMore = false;
+                    timelineList.insertAdjacentHTML('beforeend', "<p style='color:#888;text-align:center;font-size:12px;'>没有更多了</p>");
+                    return;
+                }
+                statuses.forEach(status => appendStatusItem(timelineList, status));
+                tlPage.maxId = statuses[statuses.length - 1].id;
+                if (statuses.length < 20) tlPage.hasMore = false;
+                appendTimelineSentinel(timelineList);
+            } else {
+                if (tlSentinel) tlSentinel.textContent = '加载更多失败，继续滚动重试';
+            }
+        } catch (err) {
+            if (tlSentinel) tlSentinel.textContent = '加载更多失败，继续滚动重试';
+        } finally {
+            tlPage.loadingMore = false;
+        }
+    }
+
+    function appendTimelineSentinel(list) {
+        if (tlSentinel) { tlObserver.unobserve(tlSentinel); tlSentinel.remove(); }
+        tlSentinel = document.createElement('div');
+        tlSentinel.id = 'timeline-sentinel';
+        tlSentinel.style.cssText = 'text-align:center;color:#888;font-size:12px;padding:10px 0;';
+        tlSentinel.textContent = tlPage.hasMore ? '上滑加载更多' : '没有更多了';
+        list.appendChild(tlSentinel);
+        tlObserver.observe(tlSentinel);
+    }
+
+    const tlObserver = new IntersectionObserver((entries) => {
+        if (entries.some(e => e.isIntersecting)) loadMoreTimeline();
+    }, { rootMargin: '200px' });
 
     // 渲染单条嘟文（时间线 / 搜索结果共用）
     function appendStatusItem(container, status) {
