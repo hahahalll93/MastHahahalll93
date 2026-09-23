@@ -161,7 +161,7 @@
 
     async function initApp() {
         try {
-            const res = await fetch('/api/v1/accounts/verify_credentials');
+            const res = await fetch('/.netlify/functions/proxy?path=accounts/verify_credentials')
             if (res.ok) {
                 loadTimeline();
             } else if (res.status === 401) {
@@ -200,7 +200,7 @@
                     const blob = await fetch(src).then(r => r.blob());
                     const formData = new FormData();
                     formData.append('file', blob, 'image.png');
-                    const uploadRes = await fetch('/api/v1/media', {
+                    const uploadRes = await fetch('/.netlify/functions/proxy?path=media', {
                         method: 'POST',
                         body: formData
                     });
@@ -214,7 +214,7 @@
 
             mediaIds = (await Promise.all(imageUploadPromises)).filter(id => id !== null);
 
-            const res = await fetch('/api/v1/statuses', {
+            const res = await fetch('/.netlify/functions/proxy?path=statuses', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -261,7 +261,8 @@
         const timelineList = document.getElementById('timeline-list');
         timelineList.innerHTML = "<div class='loading'><div class='spinner'></div><p>正在加载...</p></div>";
         try {
-            const res = await fetch('/api/v1/timelines/home?limit=20&min_id=0&since_id=0&id_as_string=true');
+            const mastodonPath = 'timelines/home?limit=20&min_id=0&since_id=0&id_as_string=true';
+            const res = await fetch(`/.netlify/functions/proxy?path=${encodeURIComponent(mastodonPath)}`);
             if (res.ok) {
                 const statuses = await res.json();
                 timelineList.innerHTML = '';
@@ -326,7 +327,7 @@
         if (!confirm('确定要删除这条嘟文吗？')) return;
 
         try {
-            const response = await fetch(`/api/v1/statuses/${id}?delete_media=true`, {
+            const response = await fetch(`/.netlify/functions/proxy?path=statuses/${id}?delete_media=true`, {
                 method: 'DELETE',
             });
 
