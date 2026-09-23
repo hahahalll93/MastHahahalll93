@@ -53,13 +53,17 @@
         .status-content { margin-bottom: 8px; word-break: break-word; }
         .status-content img { max-width: 100%; border-radius: 8px; margin-top: 8px; }
         .status-date { font-size: 12px; color: #888; }
-        .today-stats { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #555; background: #f0f1ff; border: 1px solid #dedfff; border-radius: 999px; padding: 4px 12px; white-space: nowrap; }
-        .today-stats .num { font-weight: bold; color: #6364ff; font-size: 16px; }
+        .today-stats { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #fff; background: linear-gradient(135deg, #6364ff, #8b5cf6); border-radius: 999px; padding: 4px 14px; box-shadow: 0 2px 8px rgba(99, 100, 255, 0.35); white-space: nowrap; line-height: 1.4; }
+        .today-stats .num { font-weight: 700; font-size: 16px; line-height: 1; }
+        .today-stats .dot { width: 6px; height: 6px; border-radius: 50%; background: #fff; animation: pulse 1.6s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 
-        /* 发布热力图（最近7天，横向） */
-        .hm-week { display: flex; gap: 4px; }
+        /* 发布热力图（最近7天，横排，参照图片样式） */
+        .heatmap-row { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+        .heatmap-row h2 { margin: 0; white-space: nowrap; }
+        .hm-week { display: flex; gap: 6px; }
         .hm-week .hm-day { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: default; }
-        .hm-week .hm-cell { width: 28px; height: 28px; border-radius: 4px; }
+        .hm-week .hm-cell { width: 32px; height: 32px; border-radius: 6px; }
         .hm-week .hm-label { font-size: 11px; color: #888; }
         .hm-week .hm-label.today { color: #6364ff; font-weight: bold; }
         .hm-cell { width: 12px; height: 12px; border-radius: 2px; background: #eef0f6; }
@@ -68,8 +72,10 @@
         .hm-cell.lv3 { background: #8b8dff; }
         .hm-cell.lv4 { background: #6a6cff; }
         .hm-cell.lv5 { background: #4849e8; }
-        .hm-legend { display: flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 11px; color: #888; }
-        .heatmap-note { font-size: 12px; color: #888; }
+        .hm-legend { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #888; white-space: nowrap; }
+        .hm-gradient { width: 80px; height: 10px; border-radius: 5px; background: linear-gradient(90deg, #eef0f6, #d8d9ff, #b3b5ff, #8b8dff, #6a6cff, #4849e8); }
+        .hm-day.active .hm-cell { outline: 2px solid #6364ff; outline-offset: 1px; }
+        .hm-info { font-size: 12px; color: #555; margin-top: 6px; min-height: 14px; }
         .heatmap-status { font-size: 12px; color: #888; margin-top: 6px; min-height: 14px; }
         .status-meta { display: flex; gap: 24px; margin: 6px 0; font-size: 13px; color: #555; align-items: center; }
         .status-stat { display: inline-flex; align-items: center; gap: 3px; cursor: default; }
@@ -81,6 +87,16 @@
         .visibility-badge.direct { background: #6a1b9a; }
         .timeline-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
         .timeline-header h2 { margin: 0; color: #6364ff; }
+        .tl-title-group { display: flex; align-items: center; gap: 12px; }
+        .tl-actions { display: flex; align-items: center; gap: 4px; }
+        .timeline-card.collapsed .tl-search,
+        .timeline-card.collapsed #timeline-list { display: none; }
+        .tl-search { display: none; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .tl-search.show { display: flex; }
+        .tl-search input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s; }
+        .tl-search input:focus { border-color: #6364ff; }
+        .tl-search button { background-color: transparent; color: #6364ff; border: 1px solid #dedfff; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .tl-search button:hover { background: #f0f1ff; }
         .timeline-header button { background-color: transparent; color: #6364ff; border: none; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 18px; transition: background 0.3s; display: flex; align-items: center; justify-content: center; }
         /*.timeline-header button:hover { background: #5659d6; }*/
         .timeline-header button:disabled { background: #ccc; cursor: not-allowed; }
@@ -105,32 +121,42 @@
     </div>
     <div class="compose-footer">
         <span class="char-count" id="char-count">0 / 500</span>
-        <button id="postBtn" title="发布嘟文" disabled>↑</button>
+        <button id="postBtn" title="发布嘟文" disabled><img class="icon" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201024%201024'%3E%3Cpath%20d='M781.013333%2093.226667c94.549333-35.84%20187.178667%2056.746667%20151.296%20151.338666l-235.136%20619.946667c-38.229333%20100.736-180.608%20101.077333-219.264%200.512L398.250667%20657.92a53.333333%2053.333333%200%200%200-30.592-30.634667l-207.104-79.658666c-100.565333-38.656-100.266667-181.034667%200.469333-219.264l619.946667-235.136z%20m91.477334%20128.597333c16.298667-42.965333-25.813333-85.077333-68.778667-68.778667L183.68%20388.266667c-45.738667%2017.365333-45.866667%2082.048-0.170667%2099.626666l207.104%2079.658667c30.976%2011.946667%2055.466667%2036.394667%2067.413334%2067.370667l79.616%20207.146666c17.578667%2045.696%2082.261333%2045.525333%2099.626666-0.256L872.533333%20221.866667z%20m-297.813334%20182.186667a32%2032%200%200%201%2045.269334%2045.269333l-85.290667%2085.333333a32%2032%200%200%201-45.226667-45.226666l85.248-85.333334z'%20fill='%23ffffff'/%3E%3C/svg%3E" alt="发布" width="20" height="20"></button>
     </div>
     <div id="post-msg"></div>
 </div>
 
-<div class="card">
+<div class="card timeline-card" id="timeline-card">
     <div class="timeline-header">
-        <h2>我的时间线</h2>
-        <div class="today-stats">今日已发布 <span class="num" id="today-count">…</span> 条</div>
-        <button id="refresh-btn" title="刷新">⟳</button>
+        <div class="tl-title-group">
+            <h2>我的时间线</h2>
+            <div class="today-stats"><span class="dot"></span>今日已发布 <span class="num" id="today-count">…</span> 条</div>
+        </div>
+        <div class="tl-actions">
+            <button id="collapse-btn" title="折叠"><img class="icon" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%236364ff'%20stroke-width='2.5'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M6%2015l6-6%206%206'/%3E%3C/svg%3E" alt="折叠" width="18" height="18"></button>
+            <button id="search-toggle-btn" title="搜索"><img class="icon" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201024%201024'%3E%3Cpath%20d='M490.666667%2053.333333c241.493333%200%20437.333333%20195.84%20437.333333%20437.333334%200%20109.226667-40.192%20209.066667-106.453333%20285.696l0.981333%200.853333%20138.752%20138.837333a32%2032%200%201%201-45.226667%2045.226667l-138.794666-138.752c-0.341333-0.298667-0.597333-0.64-0.853334-0.981333A435.456%20435.456%200%200%201%20490.666667%20928c-241.493333%200-437.333333-195.84-437.333334-437.333333S249.173333%2053.333333%20490.666667%2053.333333z%20m0%2064a373.333333%20373.333333%200%201%200%200%20746.666667%20373.333333%20373.333333%200%200%200%200-746.666667z'%20fill='%236364ff'/%3E%3C/svg%3E" alt="搜索" width="18" height="18"></button>
+            <button id="refresh-btn" title="刷新">⟳</button>
+        </div>
+    </div>
+    <div class="tl-search" id="search-row">
+        <input id="search-input" type="text" placeholder="搜索我发布的嘟文…" autocomplete="off">
+        <button id="search-btn" title="搜索"><img class="icon" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201024%201024'%3E%3Cpath%20d='M490.666667%2053.333333c241.493333%200%20437.333333%20195.84%20437.333333%20437.333334%200%20109.226667-40.192%20209.066667-106.453333%20285.696l0.981333%200.853333%20138.752%20138.837333a32%2032%200%201%201-45.226667%2045.226667l-138.794666-138.752c-0.341333-0.298667-0.597333-0.64-0.853334-0.981333A435.456%20435.456%200%200%201%20490.666667%20928c-241.493333%200-437.333333-195.84-437.333334-437.333333S249.173333%2053.333333%20490.666667%2053.333333z%20m0%2064a373.333333%20373.333333%200%201%200%200%20746.666667%20373.333333%20373.333333%200%200%200%200-746.666667z'%20fill='%236364ff'/%3E%3C/svg%3E" alt="搜索" width="18" height="18"></button>
     </div>
     <div id="timeline-list"></div>
 </div>
 
 <div class="card">
-    <div class="timeline-header">
+    <div class="heatmap-row">
         <h2>发布热力图</h2>
-        <span class="heatmap-note">最近7天 · 原创嘟文</span>
+        <div id="heatmap-grid" class="hm-week"></div>
+        <div class="hm-legend">
+            <span>少</span>
+            <div class="hm-gradient"></div>
+            <span>多</span>
+        </div>
     </div>
-    <div id="heatmap-grid" class="hm-week"></div>
+    <p id="hm-info" class="hm-info"></p>
     <p id="heatmap-status" class="heatmap-status">正在加载热力图…</p>
-    <div class="hm-legend">
-        <span>少</span>
-        <i class="hm-cell lv0"></i><i class="hm-cell lv1"></i><i class="hm-cell lv2"></i><i class="hm-cell lv3"></i><i class="hm-cell lv4"></i><i class="hm-cell lv5"></i>
-        <span>多</span>
-    </div>
 </div>
 
 <!-- Quill JS -->
@@ -273,7 +299,6 @@
             showMsg(postMsg, '发送失败，网络出错。', true);
         } finally {
             postBtn.disabled = false;
-            postBtn.textContent = '↑';
         }
     });
 
@@ -285,7 +310,21 @@
         }
     });
 
-    refreshBtn.addEventListener('click', () => { loadTimeline(); loadTodayCount(); loadHeatmap(); });
+    refreshBtn.addEventListener('click', () => {
+        if (searchInput) searchInput.value = '';
+        loadTimeline(); loadTodayCount(); loadHeatmap();
+    });
+
+    // 折叠 / 展开时间线
+    const collapseBtn = document.getElementById('collapse-btn');
+    const timelineCard = document.getElementById('timeline-card');
+    const COLLAPSE_UP = 'data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%236364ff%27%20stroke-width=%272.5%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27%3E%3Cpath%20d=%27M6%2015l6-6%206%206%27/%3E%3C/svg%3E';
+    const COLLAPSE_DOWN = 'data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%236364ff%27%20stroke-width=%272.5%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27%3E%3Cpath%20d=%27M6%209l6%206%206-6%27/%3E%3C/svg%3E';
+    collapseBtn.addEventListener('click', () => {
+        const collapsed = timelineCard.classList.toggle('collapsed');
+        collapseBtn.title = collapsed ? '展开' : '折叠';
+        collapseBtn.innerHTML = `<img class="icon" src="${collapsed ? COLLAPSE_DOWN : COLLAPSE_UP}" alt="${collapsed ? '展开' : '折叠'}" width="18" height="18">`;
+    });
 
     function getVisibilityLabel(vis) {
         const map = { public: '公开', unlisted: '未列出', private: '仅自己可见', direct: '私信' };
@@ -305,41 +344,7 @@
                     timelineList.innerHTML = "<p style='color:#888;'>暂无最新嘟文</p>";
                     return;
                 }
-                statuses.forEach(status => {
-                    const div = document.createElement('div');
-                    div.className = 'status-item';
-                    const date = new Date(status.created_at).toLocaleString('zh-CN', { hour12: false });
-
-                    // 获取媒体附件
-                    let mediaHtml = '';
-                    if (status.media_attachments && status.media_attachments.length > 0) {
-                        status.media_attachments.forEach(media => {
-                            if (media.type === 'image') {
-                                mediaHtml += '<img src="' + media.preview_url + '" alt="image" style="max-width:100%;border-radius:8px;margin-top:8px;display:block;">';
-                            }
-                        });
-                    }
-
-                    div.innerHTML = `
-                        <div class="status-header" style="display: flex;justify-content: space-between;">
-                            <div class="status-info">
-                                <h3>
-                                    @${status.account.display_name || status.account.username}
-                                    <span class="visibility-badge ${status.visibility}" title="可见性: ${getVisibilityLabel(status.visibility)}">${getVisibilityLabel(status.visibility)}</span>
-                                </h3>
-                            </div>
-                            <button class="delete-btn" onclick="deleteStatus('${status.id}')" title="删除">
-                              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M3 6h18"/>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                              </svg>
-                            </button>
-                        </div>
-                        <div class="status-content">${status.content}${mediaHtml}</div>
-                        <div class="status-date">${date}</div>
-                    `;
-                    timelineList.appendChild(div);
-                });
+                statuses.forEach(status => appendStatusItem(timelineList, status));
             } else {
                 timelineList.innerHTML = "<p style='color:red;'>加载时间线失败。</p>";
             }
@@ -347,6 +352,96 @@
             timelineList.innerHTML = "<p style='color:red;'>加载失败。</p>";
         }
     }
+
+    // 渲染单条嘟文（时间线 / 搜索结果共用）
+    function appendStatusItem(container, status) {
+        const div = document.createElement('div');
+        div.className = 'status-item';
+        const date = new Date(status.created_at).toLocaleString('zh-CN', { hour12: false });
+
+        // 获取媒体附件
+        let mediaHtml = '';
+        if (status.media_attachments && status.media_attachments.length > 0) {
+            status.media_attachments.forEach(media => {
+                if (media.type === 'image') {
+                    mediaHtml += '<img src="' + media.preview_url + '" alt="image" style="max-width:100%;border-radius:8px;margin-top:8px;display:block;">';
+                }
+            });
+        }
+
+        div.innerHTML = `
+            <div class="status-header" style="display: flex;justify-content: space-between;">
+                <div class="status-info">
+                    <h3>
+                        @${status.account.display_name || status.account.username}
+                        <span class="visibility-badge ${status.visibility}" title="可见性: ${getVisibilityLabel(status.visibility)}">${getVisibilityLabel(status.visibility)}</span>
+                    </h3>
+                </div>
+                <button class="delete-btn" onclick="deleteStatus('${status.id}')" title="删除">
+                  <img class="icon" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%236364ff'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M3%206h18'/%3E%3Cpath%20d='M19%206v14a2%202%200%200%201-2%202H7a2%202%200%200%201-2-2V6m3%200V4a2%202%200%200%201%202-2h4a2%202%200%200%201%202%202v2'/%3E%3C/svg%3E" alt="删除" width="16" height="16">
+                </button>
+            </div>
+            <div class="status-content">${status.content}${mediaHtml}</div>
+            <div class="status-date">${date}</div>
+        `;
+        container.appendChild(div);
+    }
+
+    // 搜索自己发布的嘟文（Mastodon search 接口，account_id 限定本人）
+    const searchInput = document.getElementById('search-input');
+    const searchBtn = document.getElementById('search-btn');
+
+    async function doSearch() {
+        const q = searchInput.value.trim();
+        const timelineList = document.getElementById('timeline-list');
+        if (!q) {
+            loadTimeline();
+            return;
+        }
+        timelineList.innerHTML = "<div class='loading'><div class='spinner'></div><p>正在搜索…</p></div>";
+        try {
+            const verifyRes = await fetch('/.netlify/functions/proxy?path=accounts/verify_credentials');
+            if (!verifyRes.ok) {
+                timelineList.innerHTML = "<p style='color:red;'>搜索失败。</p>";
+                return;
+            }
+            const me = await verifyRes.json();
+            const searchPath = `search?q=${encodeURIComponent(q)}&type=statuses&account_id=${me.id}&limit=20`;
+            const res = await fetch(`/.netlify/functions/proxy?path=${encodeURIComponent(searchPath)}`);
+            if (res.ok) {
+                const data = await res.json();
+                const statuses = data.statuses || [];
+                timelineList.innerHTML = '';
+                if (statuses.length === 0) {
+                    timelineList.innerHTML = "<p style='color:#888;'>没有找到匹配的嘟文</p>";
+                    return;
+                }
+                statuses.forEach(status => appendStatusItem(timelineList, status));
+            } else {
+                timelineList.innerHTML = "<p style='color:red;'>搜索失败。</p>";
+            }
+        } catch (err) {
+            timelineList.innerHTML = "<p style='color:red;'>搜索失败。</p>";
+        }
+    }
+
+    searchBtn.addEventListener('click', doSearch);
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') doSearch();
+    });
+
+    // 头部放大镜：显示 / 隐藏搜索框；隐藏时清空输入并刷新时间线
+    const searchToggleBtn = document.getElementById('search-toggle-btn');
+    const searchRow = document.getElementById('search-row');
+    searchToggleBtn.addEventListener('click', () => {
+        const showing = searchRow.classList.toggle('show');
+        if (showing) {
+            searchInput.focus();
+        } else {
+            searchInput.value = '';
+            loadTimeline();
+        }
+    });
 
     function showMsg(el, text, isError = false) {
         el.textContent = text;
@@ -433,12 +528,39 @@
             const lv = heatmapCellLevel(n);
             const isToday = i === 0;
             gridHtml += `
-                <div class="hm-day" title="${key}：${n} 条">
+                <div class="hm-day" data-key="${key}" data-label="${d.getMonth() + 1}/${d.getDate()}" data-count="${n}" title="${key}：${n} 条">
                     <i class="hm-cell lv${lv}"></i>
                     <span class="hm-label${isToday ? ' today' : ''}">${d.getMonth() + 1}/${d.getDate()}</span>
                 </div>`;
         }
         gridEl.innerHTML = gridHtml;
+    }
+
+    // 悬停 / 点击色块时显示当天的具体发布条数
+    const hmGridEl = document.getElementById('heatmap-grid');
+    if (hmGridEl) {
+        hmGridEl.addEventListener('mouseover', (e) => {
+            const day = e.target.closest('.hm-day');
+            if (day) showHeatmapInfo(day);
+        });
+        hmGridEl.addEventListener('click', (e) => {
+            const day = e.target.closest('.hm-day');
+            if (day) showHeatmapInfo(day);
+        });
+        hmGridEl.addEventListener('mouseleave', clearHeatmapInfo);
+    }
+
+    function showHeatmapInfo(day) {
+        document.querySelectorAll('.hm-day.active').forEach(el => el.classList.remove('active'));
+        day.classList.add('active');
+        const infoEl = document.getElementById('hm-info');
+        if (infoEl) infoEl.textContent = `${day.dataset.label}（${day.dataset.key}）：${day.dataset.count} 条`;
+    }
+
+    function clearHeatmapInfo() {
+        document.querySelectorAll('.hm-day.active').forEach(el => el.classList.remove('active'));
+        const infoEl = document.getElementById('hm-info');
+        if (infoEl) infoEl.textContent = '';
     }
 
     // 发布成功后，本地把“今天”的格子 +1，避免重新拉一整年数据
