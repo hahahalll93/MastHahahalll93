@@ -75,7 +75,7 @@
         .hm-cell.lv5 { background: #4849e8; }
         .hm-day.active .hm-cell { outline: 2px solid #6364ff; outline-offset: 1px; }
         .hm-info { font-size: 12px; color: #555; white-space: nowrap; }
-        .heatmap-status { font-size: 12px; color: #888; margin-top: 6px; min-height: 14px; }
+        .heatmap-status { font-size: 12px; color: #888; margin-top: 6px; }
         .status-meta { display: flex; gap: 24px; margin: 6px 0; font-size: 13px; color: #555; align-items: center; }
         .status-stat { display: inline-flex; align-items: center; gap: 3px; cursor: default; }
         .stat-icon { font-size: 14px; }
@@ -592,6 +592,8 @@
     async function loadHeatmap() {
         const gridEl = document.getElementById('heatmap-grid');
         const statusEl = document.getElementById('heatmap-status');
+        statusEl.style.display = '';
+        statusEl.textContent = '正在加载热力图…';
         try {
             const verifyRes = await fetch('/.netlify/functions/proxy?path=accounts/verify_credentials');
             if (!verifyRes.ok) {
@@ -631,9 +633,16 @@
 
             heatmapState = { daily, start, today, truncated };
             renderHeatmap(daily, start, today, truncated);
-            statusEl.textContent = truncated ? '发布量较大，仅统计了最近部分数据。' : '';
+            if (truncated) {
+                statusEl.textContent = '发布量较大，仅统计了最近部分数据。';
+                statusEl.style.display = '';
+            } else {
+                statusEl.textContent = '';
+                statusEl.style.display = 'none';
+            }
         } catch (err) {
             statusEl.textContent = '加载失败';
+            statusEl.style.display = '';
         }
     }
 
