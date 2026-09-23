@@ -39,13 +39,15 @@
             position: relative;
         }
 
-        /* 给头部加右内边距，避免内容和删除按钮重叠 */
-        .status-header {
-            padding-right: 36px;
+        /* 删除按钮：桌面端悬停嘟文时淡入，触屏端常显但降低存在感 */
+        .delete-btn { background: transparent; border: none; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.65; transition: opacity 0.2s, background 0.2s; }
+        .delete-btn:hover { background: #fdecec; opacity: 1; }
+        .delete-btn img { width: 15px; height: 15px; }
+        @media (hover: hover) and (pointer: fine) {
+            .delete-btn { opacity: 0; }
+            .status-item:hover .delete-btn, .delete-btn:focus-visible { opacity: 0.55; }
+            .status-item:hover .delete-btn:hover { opacity: 1; }
         }
-
-        .delete-btn { background-color: transparent;padding: 4px 8px; cursor: pointer;color: #6364ff;font-size: 18px; }
-        .delete-btn:hover { background-color: transparent;color: #6364ff;font-size: 18px; }
 
         .status-item { border-bottom: 1px solid #eee; padding: 15px 0; }
         .status-item:last-child { border-bottom: none; }
@@ -522,7 +524,7 @@
                     </h3>
                 </div>
                 <button class="delete-btn" onclick="deleteStatus('${status.id}')" title="删除">
-                  <img class="icon" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%236364ff'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M3%206h18'/%3E%3Cpath%20d='M19%206v14a2%202%200%200%201-2%202H7a2%202%200%200%201-2-2V6m3%200V4a2%202%200%200%201%202-2h4a2%202%200%200%201%202%202v2'/%3E%3C/svg%3E" alt="删除" width="16" height="16">
+                  <img class="icon" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%23999'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M3%206h18'/%3E%3Cpath%20d='M19%206v14a2%202%200%200%201-2%202H7a2%202%200%200%201-2-2V6m3%200V4a2%202%200%200%201%202-2h4a2%202%200%200%201%202%202v2'/%3E%3C/svg%3E" alt="删除" width="16" height="16">
                 </button>
             </div>
             <div class="status-content">${status.content}${mediaHtml}</div>
