@@ -1,0 +1,15 @@
+# Local Netlify folder
+.netlify
+
+# 环境变量（含敏感 token，禁止入库）
+.env
+.env.*
+!.env.example
+
+# 构建产物
+dist
+
+# 敏感文件（含 token）与本地目录，禁止入库
+process.env
+node_modules/
+.idea/

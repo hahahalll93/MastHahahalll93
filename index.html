@@ -17,8 +17,8 @@
         /* 发布区域样式 */
         .compose-area { margin-bottom: 10px; }
         .compose-area .ql-toolbar.ql-snow { border: 1px solid #ddd !important; border-bottom: 1px solid #ddd !important; border-radius: 4px 4px 0 0; background: #fafafa; }
-        .compose-area .ql-container.ql-snow { border: 1px solid #ddd !important; border-radius: 0 0 4px 4px; min-height: 80px; }
-        .compose-area .ql-editor { min-height: 80px; font-size: 14px; }
+        .compose-area .ql-container.ql-snow { border: 1px solid #ddd !important; border-radius: 0 0 4px 4px; min-height: 160px; }
+        .compose-area .ql-editor { min-height: 160px; font-size: 14px; }
         .compose-area .ql-snow .ql-stroke { stroke: #555; }
         .compose-area .ql-snow .ql-fill { fill: #555; }
         .compose-area .ql-snow .ql-picker-label { color: #555; }
@@ -53,6 +53,25 @@
         .status-content { margin-bottom: 8px; word-break: break-word; }
         .status-content img { max-width: 100%; border-radius: 8px; margin-top: 8px; }
         .status-date { font-size: 12px; color: #888; }
+        .today-stats { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #555; background: #f0f1ff; border: 1px solid #dedfff; border-radius: 999px; padding: 4px 12px; white-space: nowrap; }
+        .today-stats .num { font-weight: bold; color: #6364ff; font-size: 16px; }
+
+        /* 发布热力图 */
+        .hm { overflow-x: auto; }
+        .hm-months { display: grid; grid-template-columns: repeat(53, 12px); gap: 3px; margin-left: 32px; font-size: 10px; color: #888; height: 14px; white-space: nowrap; }
+        .hm-body { display: flex; gap: 6px; }
+        .hm-days { width: 26px; display: grid; grid-template-rows: repeat(7, 12px); gap: 3px; font-size: 10px; color: #888; text-align: right; line-height: 12px; }
+        .hm-grid { display: grid; grid-template-rows: repeat(7, 12px); grid-auto-flow: column; grid-auto-columns: 12px; gap: 3px; }
+        .hm-cell { width: 12px; height: 12px; border-radius: 2px; background: #eef0f6; }
+        .hm-cell.lv1 { background: #d8d9ff; }
+        .hm-cell.lv2 { background: #b3b5ff; }
+        .hm-cell.lv3 { background: #8b8dff; }
+        .hm-cell.lv4 { background: #6a6cff; }
+        .hm-cell.lv5 { background: #4849e8; }
+        .hm-cell.empty { background: transparent; }
+        .hm-legend { display: flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 11px; color: #888; }
+        .heatmap-note { font-size: 12px; color: #888; }
+        .heatmap-status { font-size: 12px; color: #888; margin-top: 6px; min-height: 14px; }
         .status-meta { display: flex; gap: 24px; margin: 6px 0; font-size: 13px; color: #555; align-items: center; }
         .status-stat { display: inline-flex; align-items: center; gap: 3px; cursor: default; }
         .stat-icon { font-size: 14px; }
@@ -95,9 +114,32 @@
 <div class="card">
     <div class="timeline-header">
         <h2>我的时间线</h2>
+        <div class="today-stats">今日已发布 <span class="num" id="today-count">…</span> 条</div>
         <button id="refresh-btn" title="刷新">⟳</button>
     </div>
     <div id="timeline-list"></div>
+</div>
+
+<div class="card">
+    <div class="timeline-header">
+        <h2>发布热力图</h2>
+        <span class="heatmap-note">最近一周 · 原创嘟文</span>
+    </div>
+    <div class="hm">
+        <div id="heatmap-months" class="hm-months"></div>
+        <div class="hm-body">
+            <div class="hm-days">
+                <span>周一</span><span></span><span>周三</span><span></span><span>周五</span><span></span><span></span>
+            </div>
+            <div id="heatmap-grid" class="hm-grid"></div>
+        </div>
+    </div>
+    <p id="heatmap-status" class="heatmap-status">正在加载热力图…</p>
+    <div class="hm-legend">
+        <span>少</span>
+        <i class="hm-cell lv0"></i><i class="hm-cell lv1"></i><i class="hm-cell lv2"></i><i class="hm-cell lv3"></i><i class="hm-cell lv4"></i><i class="hm-cell lv5"></i>
+        <span>多</span>
+    </div>
 </div>
 
 <!-- Quill JS -->
@@ -164,6 +206,8 @@
             const res = await fetch('/.netlify/functions/proxy?path=accounts/verify_credentials')
             if (res.ok) {
                 loadTimeline();
+                loadTodayCount();
+                loadHeatmap();
             } else if (res.status === 401) {
                 showMsg(postMsg, 'Token 无效，请检查是否填写正确。', true);
             } else {
@@ -229,7 +273,7 @@
                 showMsg(postMsg, '发送成功！正在刷新...', false);
                 quill.setText('');
                 updateCharCount();
-                setTimeout(loadTimeline, 1000);
+                setTimeout(() => { loadTimeline(); loadTodayCount(); bumpTodayInHeatmap(); }, 1000);
             } else {
                 const err = await res.json();
                 showMsg(postMsg, '发送失败: ' + (err.error || '未知错误'), true);
@@ -250,7 +294,7 @@
         }
     });
 
-    refreshBtn.addEventListener('click', loadTimeline);
+    refreshBtn.addEventListener('click', () => { loadTimeline(); loadTodayCount(); loadHeatmap(); });
 
     function getVisibilityLabel(vis) {
         const map = { public: '公开', unlisted: '未列出', private: '仅自己可见', direct: '私信' };
@@ -321,6 +365,167 @@
         }, 1000);
     }
 
+    // =========================================
+    // 发布热力图：统计最近一周每天发布的原创嘟文数
+    let heatmapState = null;
+
+    function localDateKey(d) {
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function heatmapCellLevel(n) {
+        if (n <= 0) return 0;
+        if (n === 1) return 1;
+        if (n <= 3) return 2;
+        if (n <= 6) return 3;
+        if (n <= 9) return 4;
+        return 5;
+    }
+
+    async function loadHeatmap() {
+        const gridEl = document.getElementById('heatmap-grid');
+        const statusEl = document.getElementById('heatmap-status');
+        try {
+            const verifyRes = await fetch('/.netlify/functions/proxy?path=accounts/verify_credentials');
+            if (!verifyRes.ok) {
+                statusEl.textContent = '加载失败';
+                return;
+            }
+            const me = await verifyRes.json();
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const start = new Date(today);
+            start.setDate(start.getDate() - 6); // 最近一周（7 天）
+
+            // 分页拉取嘟文，直到早于起始日期（最多 80 页 = 3200 条）
+            const daily = {};
+            let maxId = null;
+            let truncated = false;
+            for (let page = 0; page < 80; page++) {
+                let path = `accounts/${me.id}/statuses?limit=40&exclude_reblogs=true`;
+                if (maxId) path += `&max_id=${maxId}`;
+                const res = await fetch(`/.netlify/functions/proxy?path=${encodeURIComponent(path)}`);
+                if (!res.ok) break;
+                const statuses = await res.json();
+                if (!Array.isArray(statuses) || statuses.length === 0) break;
+
+                let reachedStart = false;
+                for (const s of statuses) {
+                    const d = new Date(s.created_at);
+                    if (d < start) { reachedStart = true; break; }
+                    const key = localDateKey(d);
+                    daily[key] = (daily[key] || 0) + 1;
+                }
+                if (reachedStart) break;
+                maxId = statuses[statuses.length - 1].id;
+                if (page === 79) truncated = true;
+            }
+
+            heatmapState = { daily, start, today, truncated };
+            renderHeatmap(daily, start, today, truncated);
+            statusEl.textContent = truncated ? '发布量较大，仅统计了最近部分数据。' : '';
+        } catch (err) {
+            statusEl.textContent = '加载失败';
+        }
+    }
+
+    function renderHeatmap(daily, start, today, truncated) {
+        const gridEl = document.getElementById('heatmap-grid');
+        const monthsEl = document.getElementById('heatmap-months');
+        const totalDays = Math.round((today - start) / 86400000) + 1;
+        const offset = (start.getDay() + 6) % 7; // 周一作为每周第一天
+        const weeks = Math.ceil((offset + totalDays) / 7);
+
+        // 顶部月份标签
+        let monthHtml = '';
+        let prevMonth = -1;
+        for (let w = 0; w < weeks; w++) {
+            const idx = w * 7 - offset;
+            if (idx >= 0 && idx < totalDays) {
+                const d = new Date(start);
+                d.setDate(start.getDate() + idx);
+                const m = d.getMonth();
+                if (m !== prevMonth) {
+                    monthHtml += `<span>${m + 1}月</span>`;
+                    prevMonth = m;
+                } else {
+                    monthHtml += '<span></span>';
+                }
+            } else {
+                monthHtml += '<span></span>';
+            }
+        }
+
+        // 网格：列为周，行为周一~周日
+        let gridHtml = '';
+        for (let w = 0; w < weeks; w++) {
+            for (let day = 0; day < 7; day++) {
+                const idx = w * 7 + day - offset;
+                if (idx < 0 || idx >= totalDays) {
+                    gridHtml += '<i class="hm-cell empty"></i>';
+                    continue;
+                }
+                const d = new Date(start);
+                d.setDate(start.getDate() + idx);
+                const key = localDateKey(d);
+                const n = daily[key] || 0;
+                const lv = heatmapCellLevel(n);
+                gridHtml += `<i class="hm-cell lv${lv}" title="${key}：${n} 条"></i>`;
+            }
+        }
+
+        monthsEl.innerHTML = monthHtml;
+        gridEl.innerHTML = gridHtml;
+    }
+
+    // 发布成功后，本地把“今天”的格子 +1，避免重新拉一整年数据
+    function bumpTodayInHeatmap() {
+        if (!heatmapState) return;
+        const key = localDateKey(new Date());
+        heatmapState.daily[key] = (heatmapState.daily[key] || 0) + 1;
+        renderHeatmap(heatmapState.daily, heatmapState.start, heatmapState.today, heatmapState.truncated);
+    }
+    async function loadTodayCount() {
+        const todayCountEl = document.getElementById('today-count');
+        try {
+            const verifyRes = await fetch('/.netlify/functions/proxy?path=accounts/verify_credentials');
+            if (!verifyRes.ok) {
+                todayCountEl.textContent = '-';
+                return;
+            }
+            const me = await verifyRes.json();
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+
+            let count = 0;
+            let maxId = null;
+            // 最多翻 20 页（每页 40 条），足够覆盖一天内的发布量
+            for (let page = 0; page < 20; page++) {
+                let path = `accounts/${me.id}/statuses?limit=40&exclude_reblogs=true`;
+                if (maxId) path += `&max_id=${maxId}`;
+                const res = await fetch(`/.netlify/functions/proxy?path=${encodeURIComponent(path)}`);
+                if (!res.ok) break;
+                const statuses = await res.json();
+                if (!Array.isArray(statuses) || statuses.length === 0) break;
+
+                let reachedYesterday = false;
+                for (const status of statuses) {
+                    if (new Date(status.created_at) < todayStart) {
+                        reachedYesterday = true;
+                        break;
+                    }
+                    count++;
+                }
+                if (reachedYesterday) break;
+                maxId = statuses[statuses.length - 1].id;
+            }
+            todayCountEl.textContent = count;
+        } catch (err) {
+            todayCountEl.textContent = '-';
+        }
+    }
+
     // 删除嘟文
     async function deleteStatus(id) {
         console.log(id);
@@ -335,10 +540,11 @@
                 const err = await response.json();
                 throw new Error(err.error || '删除失败');
             }
+            loadTodayCount();
         } catch (error) {
             alert('删除失败：' + error.message);
         }
     }
-</script>1
+</script>
 </body>
 </html>
