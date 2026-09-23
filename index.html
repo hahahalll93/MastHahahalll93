@@ -86,10 +86,10 @@
         .visibility-badge.unlisted { background: #1565c0; }
         .visibility-badge.private { background: #f57f17; }
         .visibility-badge.direct { background: #6a1b9a; }
-        .timeline-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .timeline-header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; row-gap: 8px; margin-bottom: 10px; }
         .timeline-header h2 { margin: 0; color: #6364ff; }
         .tl-title-group { display: flex; align-items: center; gap: 12px; }
-        .tl-actions { display: flex; align-items: center; gap: 4px; }
+        .tl-actions { display: flex; align-items: center; gap: 4px; margin-left: auto; }
         .timeline-card.collapsed .tl-search,
         .timeline-card.collapsed #timeline-list { display: none; }
         .tl-search { display: none; align-items: center; gap: 8px; margin-bottom: 12px; }
@@ -144,12 +144,13 @@
             h2 { font-size: 18px; }
             .compose-area .ql-editor { min-height: 110px; }
             .timeline-header button, .album-collapse-btn { width: 32px; height: 32px; }
+            .tl-title-group { flex-basis: 100%; }
             .today-stats { font-size: 11px; padding: 2px 10px; }
             .tl-search input { font-size: 14px; padding: 7px 10px; }
             .heatmap-row { gap: 8px; }
-            .heatmap-row h2 { font-size: 16px; }
-            .hm-right { gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-            .hm-info { order: 3; flex-basis: 100%; font-size: 11px; text-align: right; }
+            .heatmap-row h2 { flex-basis: 100%; font-size: 16px; }
+            .hm-right { gap: 8px; flex-wrap: wrap; }
+            .hm-info { order: 3; flex-basis: 100%; font-size: 11px; }
             .hm-week { gap: 4px; }
             .hm-week .hm-cell { width: 24px; height: 24px; border-radius: 5px; }
             .hm-week .hm-label { font-size: 10px; }
@@ -179,8 +180,8 @@
     <div class="timeline-header">
         <div class="tl-title-group">
             <h2>我的时间线</h2>
-            <div class="today-stats"><span class="dot"></span>今日已发布 <span class="num" id="today-count">…</span> 条</div>
         </div>
+        <div class="today-stats"><span class="dot"></span>今日已发布 <span class="num" id="today-count">…</span> 条</div>
         <div class="tl-actions">
             <button id="collapse-btn" title="折叠"><img class="icon" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%236364ff'%20stroke-width='2.5'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M6%2015l6-6%206%206'/%3E%3C/svg%3E" alt="折叠" width="18" height="18"></button>
             <button id="search-toggle-btn" title="搜索"><img class="icon" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201024%201024'%3E%3Cpath%20d='M490.666667%2053.333333c241.493333%200%20437.333333%20195.84%20437.333333%20437.333334%200%20109.226667-40.192%20209.066667-106.453333%20285.696l0.981333%200.853333%20138.752%20138.837333a32%2032%200%201%201-45.226667%2045.226667l-138.794666-138.752c-0.341333-0.298667-0.597333-0.64-0.853334-0.981333A435.456%20435.456%200%200%201%20490.666667%20928c-241.493333%200-437.333333-195.84-437.333334-437.333333S249.173333%2053.333333%20490.666667%2053.333333z%20m0%2064a373.333333%20373.333333%200%201%200%200%20746.666667%20373.333333%20373.333333%200%200%200%200-746.666667z'%20fill='%236364ff'/%3E%3C/svg%3E" alt="搜索" width="18" height="18"></button>
