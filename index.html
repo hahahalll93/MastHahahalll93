@@ -90,6 +90,9 @@
         .timeline-header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; row-gap: 8px; margin-bottom: 10px; }
         .timeline-header h2 { margin: 0; color: #6364ff; }
         .tl-title-group { display: flex; align-items: center; gap: 12px; }
+        .tl-mode-switch { display: inline-flex; align-items: center; background: #f0f1ff; border-radius: 999px; padding: 2px; gap: 2px; flex-shrink: 0; }
+        .tl-mode-switch .tl-mode-btn { background: transparent; border: none; color: #7a7bff; font-size: 12px; padding: 3px 12px; border-radius: 999px; cursor: pointer; line-height: 1.4; width: auto; height: auto; transition: background 0.2s, color 0.2s; }
+        .tl-mode-switch .tl-mode-btn.active { background: #6364ff; color: #fff; }
         .tl-actions { display: flex; align-items: center; gap: 4px; margin-left: auto; }
         .timeline-card.collapsed .tl-search,
         .timeline-card.collapsed #timeline-list { display: none; }
@@ -147,6 +150,7 @@
             .timeline-header button, .album-collapse-btn { width: 32px; height: 32px; }
             .tl-title-group { flex-basis: 100%; }
             .today-stats { font-size: 11px; padding: 2px 10px; }
+            .tl-mode-switch .tl-mode-btn { font-size: 11px; padding: 2px 10px; }
             .tl-search input { font-size: 14px; padding: 7px 10px; }
             .heatmap-row { gap: 8px; }
             .heatmap-row h2 { flex-basis: 100%; font-size: 16px; }
@@ -181,6 +185,10 @@
     <div class="timeline-header">
         <div class="tl-title-group">
             <h2>我的时间线</h2>
+            <div class="tl-mode-switch" id="tl-mode-switch">
+                <button type="button" class="tl-mode-btn active" data-mode="today">今日</button>
+                <button type="button" class="tl-mode-btn" data-mode="all">全部</button>
+            </div>
         </div>
         <div class="today-stats"><span class="dot"></span>今日已发布 <span class="num" id="today-count">…</span> 条</div>
         <div class="tl-actions">
@@ -424,6 +432,18 @@
         return map[vis] || vis;
     }
 
+    // 时间线展示模式：'today' 只看今天发布的，'all' 显示全部
+    let tlMode = 'today';
+    let cachedAccountId = null;
+    async function getMyAccountId() {
+        if (cachedAccountId) return cachedAccountId;
+        const res = await fetch('/.netlify/functions/proxy?path=accounts/verify_credentials');
+        if (!res.ok) throw new Error('verify_credentials failed');
+        const me = await res.json();
+        cachedAccountId = me.id;
+        return cachedAccountId;
+    }
+
     // 时间线分页状态
     let tlPage = { maxId: null, loadingMore: false, hasMore: true };
     let tlSentinel = null;
@@ -433,17 +453,29 @@
         timelineList.innerHTML = "<div class='loading'><div class='spinner'></div><p>正在加载...</p></div>";
         tlPage = { maxId: null, loadingMore: false, hasMore: true };
         try {
-            const mastodonPath = 'timelines/home?limit=20';
+            const meId = await getMyAccountId();
+            const mastodonPath = `accounts/${meId}/statuses?limit=20&exclude_reblogs=true`;
             const res = await fetch(`/.netlify/functions/proxy?path=${encodeURIComponent(mastodonPath)}`);
             if (res.ok) {
                 const statuses = await res.json();
                 timelineList.innerHTML = '';
-                if (statuses.length === 0) {
-                    timelineList.innerHTML = "<p style='color:#888;'>暂无最新嘟文</p>";
+                const todayStart = new Date();
+                todayStart.setHours(0, 0, 0, 0);
+                let shown = 0;
+                let reachedOlder = false;
+                for (const s of statuses) {
+                    if (tlMode === 'today' && new Date(s.created_at) < todayStart) { reachedOlder = true; break; }
+                    appendStatusItem(timelineList, s);
+                    shown++;
+                }
+                if (shown === 0) {
+                    timelineList.innerHTML = tlMode === 'today'
+                        ? "<p style='color:#888;'>今日暂无嘟文</p>"
+                        : "<p style='color:#888;'>暂无嘟文</p>";
                     tlPage.hasMore = false;
                     return;
                 }
-                statuses.forEach(status => appendStatusItem(timelineList, status));
+                if (reachedOlder) tlPage.hasMore = false;
                 tlPage.maxId = statuses[statuses.length - 1].id;
                 appendTimelineSentinel(timelineList);
             } else {
@@ -463,7 +495,8 @@
         const timelineList = document.getElementById('timeline-list');
         if (tlSentinel) tlSentinel.textContent = '正在加载更多…';
         try {
-            const path = `timelines/home?limit=20&max_id=${tlPage.maxId}`;
+            const meId = await getMyAccountId();
+            const path = `accounts/${meId}/statuses?limit=20&exclude_reblogs=true&max_id=${tlPage.maxId}`;
             const res = await fetch(`/.netlify/functions/proxy?path=${encodeURIComponent(path)}`);
             if (res.ok) {
                 const statuses = await res.json();
@@ -473,9 +506,22 @@
                     timelineList.insertAdjacentHTML('beforeend', "<p style='color:#888;text-align:center;font-size:12px;'>没有更多了</p>");
                     return;
                 }
-                statuses.forEach(status => appendStatusItem(timelineList, status));
+                const todayStart = new Date();
+                todayStart.setHours(0, 0, 0, 0);
+                let shown = 0;
+                let reachedOlder = false;
+                for (const s of statuses) {
+                    if (tlMode === 'today' && new Date(s.created_at) < todayStart) { reachedOlder = true; break; }
+                    appendStatusItem(timelineList, s);
+                    shown++;
+                }
+                if (shown === 0) {
+                    tlPage.hasMore = false;
+                    timelineList.insertAdjacentHTML('beforeend', "<p style='color:#888;text-align:center;font-size:12px;'>没有更多了</p>");
+                    return;
+                }
                 tlPage.maxId = statuses[statuses.length - 1].id;
-                if (statuses.length < 20) tlPage.hasMore = false;
+                if (reachedOlder || statuses.length < 20) tlPage.hasMore = false;
                 appendTimelineSentinel(timelineList);
             } else {
                 if (tlSentinel) tlSentinel.textContent = '加载更多失败，继续滚动重试';
@@ -589,6 +635,19 @@
             searchInput.value = '';
             loadTimeline();
         }
+    });
+    // 今日 / 全部 切换：默认今日
+    const tlModeSwitch = document.getElementById('tl-mode-switch');
+    tlModeSwitch.addEventListener('click', (e) => {
+        const btn = e.target.closest('.tl-mode-btn');
+        if (!btn || btn.dataset.mode === tlMode) return;
+        tlMode = btn.dataset.mode;
+        tlModeSwitch.querySelectorAll('.tl-mode-btn').forEach(b => b.classList.toggle('active', b === btn));
+        if (searchRow.classList.contains('show')) {
+            searchRow.classList.remove('show');
+            searchInput.value = '';
+        }
+        loadTimeline();
     });
 
     function showMsg(el, text, isError = false) {
