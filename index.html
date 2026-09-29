@@ -7,11 +7,17 @@
     <!-- Quill 富文本编辑器 -->
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; background-color: #f4f4f9; color: #333; }
-        .card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        h1, h2 { color: #6364ff; }
-        button { background: #6364ff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; transition: background 0.3s; }
-        button:hover { background: #5659d6; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; background-color: #f5f6f7; color: #333; }
+        .app-bar { display: flex; align-items: center; justify-content: space-between; background: #fff; border-radius: 8px; padding: 10px 16px; margin-bottom: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .app-bar-title { font-weight: 600; font-size: 15px; color: #1f2329; }
+        .app-bar-sub { font-size: 12px; color: #8a9099; margin-top: 2px; }
+        .app-bar-date { font-size: 12px; color: #8a9099; }
+        .page-footer { text-align: center; color: #b8bcc4; font-size: 12px; padding: 4px 0 20px; }
+        .tl-empty { text-align: center; color: #8a9099; font-size: 13px; padding: 36px 0; }
+        .card { background: white; border-radius: 8px; padding: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 16px; }
+        h1, h2 { color: #3370ff; font-size: 23px; }
+        button { background: #3370ff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; transition: background 0.3s; }
+        button:hover { background: #2f66e6; }
         button:disabled { background: #ccc; cursor: not-allowed; }
 
         /* 发布区域样式 */
@@ -28,8 +34,8 @@
         .char-count.warning { color: #d93025; }
 
         /* 发布按钮 - 图标样式 */
-        #postBtn { background: #6364ff; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 18px; transition: background 0.3s, transform 0.1s; display: flex; align-items: center; justify-content: center; }
-        #postBtn:hover { background: #5659d6; }
+        #postBtn { background: #3370ff; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 18px; transition: background 0.3s, transform 0.1s; display: flex; align-items: center; justify-content: center; }
+        #postBtn:hover { background: #2f66e6; }
         #postBtn:active { transform: scale(0.95); }
         #postBtn:disabled { background: #ccc; cursor: not-allowed; }
 
@@ -51,13 +57,13 @@
 
         .status-item { border-bottom: 1px solid #eee; padding: 15px 0; }
         .status-item:last-child { border-bottom: none; }
-        .status-author { font-weight: bold; color: #6364ff; margin-bottom: 5px; }
+        .status-author { font-weight: bold; color: #3370ff; margin-bottom: 5px; }
         .status-content { margin-bottom: 8px; word-break: break-word; }
         .status-content img { max-width: 100%; border-radius: 8px; margin-top: 8px; }
         .status-date { font-size: 12px; color: #888; }
-        .today-stats { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: #6364ff; background: #f0f1ff; border: 1px solid #dedfff; border-radius: 999px; padding: 3px 12px; white-space: nowrap; line-height: 1.4; }
+        .today-stats { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: #3370ff; background: #e8f1ff; border: 1px solid #d7e5ff; border-radius: 999px; padding: 3px 12px; white-space: nowrap; line-height: 1.4; }
         .today-stats .num { font-weight: 600; font-size: 13px; line-height: 1; }
-        .today-stats .dot { width: 5px; height: 5px; border-radius: 50%; background: #6364ff; animation: pulse 1.6s ease-in-out infinite; }
+        .today-stats .dot { width: 5px; height: 5px; border-radius: 50%; background: #3370ff; animation: pulse 1.6s ease-in-out infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
         /* 发布热力图（最近7天，横排：标题在左，日期块在右，信息在日期块左侧） */
@@ -68,14 +74,14 @@
         .hm-week .hm-day { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: default; }
         .hm-week .hm-cell { width: 32px; height: 32px; border-radius: 6px; }
         .hm-week .hm-label { font-size: 11px; color: #888; }
-        .hm-week .hm-label.today { color: #6364ff; font-weight: bold; }
-        .hm-cell { width: 12px; height: 12px; border-radius: 2px; background: #eef0f6; }
-        .hm-cell.lv1 { background: #d8d9ff; }
-        .hm-cell.lv2 { background: #b3b5ff; }
-        .hm-cell.lv3 { background: #8b8dff; }
-        .hm-cell.lv4 { background: #6a6cff; }
-        .hm-cell.lv5 { background: #4849e8; }
-        .hm-day.active .hm-cell { outline: 2px solid #6364ff; outline-offset: 1px; }
+        .hm-week .hm-label.today { color: #3370ff; font-weight: bold; }
+        .hm-cell { width: 12px; height: 12px; border-radius: 2px; background: #eef2f8; }
+        .hm-cell.lv1 { background: #dbe7ff; }
+        .hm-cell.lv2 { background: #b7ccff; }
+        .hm-cell.lv3 { background: #8faeff; }
+        .hm-cell.lv4 { background: #6a94ff; }
+        .hm-cell.lv5 { background: #3370ff; }
+        .hm-day.active .hm-cell { outline: 2px solid #3370ff; outline-offset: 1px; }
         .hm-info { font-size: 12px; color: #555; white-space: nowrap; }
         .hm-info:empty { display: none; }
         .heatmap-status { font-size: 12px; color: #888; margin-top: 6px; }
@@ -88,22 +94,22 @@
         .visibility-badge.private { background: #f57f17; }
         .visibility-badge.direct { background: #6a1b9a; }
         .timeline-header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; row-gap: 8px; margin-bottom: 10px; }
-        .timeline-header h2 { margin: 0; color: #6364ff; }
+        .timeline-header h2 { margin: 0; color: #3370ff; }
         .tl-title-group { display: flex; align-items: center; gap: 12px; }
-        .tl-mode-switch { display: inline-flex; align-items: center; background: #f0f1ff; border-radius: 999px; padding: 2px; gap: 2px; flex-shrink: 0; }
-        .tl-mode-switch .tl-mode-btn { background: transparent; border: none; color: #7a7bff; font-size: 12px; padding: 3px 12px; border-radius: 999px; cursor: pointer; line-height: 1.4; width: auto; height: auto; transition: background 0.2s, color 0.2s; }
-        .tl-mode-switch .tl-mode-btn.active { background: #6364ff; color: #fff; }
+        .tl-mode-switch { display: inline-flex; align-items: center; background: #e8f1ff; border-radius: 999px; padding: 2px; gap: 2px; flex-shrink: 0; }
+        .tl-mode-switch .tl-mode-btn { background: transparent; border: none; color: #3370ff; font-size: 12px; padding: 3px 12px; border-radius: 999px; cursor: pointer; line-height: 1.4; width: auto; height: auto; transition: background 0.2s, color 0.2s; }
+        .tl-mode-switch .tl-mode-btn.active { background: #3370ff; color: #fff; }
         .tl-actions { display: flex; align-items: center; gap: 4px; margin-left: auto; }
         .timeline-card.collapsed .tl-search,
         .timeline-card.collapsed #timeline-list { display: none; }
         .tl-search { display: none; align-items: center; gap: 8px; margin-bottom: 12px; }
         .tl-search.show { display: flex; }
         .tl-search input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s; }
-        .tl-search input:focus { border-color: #6364ff; }
-        .tl-search button { background-color: transparent; color: #6364ff; border: 1px solid #dedfff; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
-        .tl-search button:hover { background: #f0f1ff; }
-        .timeline-header button { background-color: transparent; color: #6364ff; border: none; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 18px; transition: background 0.3s; display: flex; align-items: center; justify-content: center; }
-        /*.timeline-header button:hover { background: #5659d6; }*/
+        .tl-search input:focus { border-color: #3370ff; }
+        .tl-search button { background-color: transparent; color: #3370ff; border: 1px solid #d7e5ff; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .tl-search button:hover { background: #e8f1ff; }
+        .timeline-header button { background-color: transparent; color: #3370ff; border: none; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 18px; transition: background 0.3s; display: flex; align-items: center; justify-content: center; }
+        /*.timeline-header button:hover { background: #2f66e6; }*/
         .timeline-header button:disabled { background: #ccc; cursor: not-allowed; }
         .status-header { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
         .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
@@ -113,7 +119,7 @@
         .error-msg { color: #d93025; margin-top: 10px; font-size: 14px; }
         .success-msg { color: #2e7d32; margin-top: 10px; font-size: 14px; }
         .loading { text-align: center; padding: 40px; color: #888; }
-        .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid #ddd; border-top-color: #6364ff; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 8px; }
+        .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid #ddd; border-top-color: #3370ff; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 8px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         /* 图片查看器（lightbox） */
         .lightbox { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); display: flex; align-items: center; justify-content: center; z-index: 9999; }
@@ -134,8 +140,8 @@
         .album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
         .album-grid .album-thumb { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; cursor: zoom-in; transition: transform 0.15s ease, box-shadow 0.15s ease; display: block; }
         .album-grid .album-thumb:hover { transform: scale(1.03); box-shadow: 0 4px 14px rgba(0,0,0,0.2); }
-        .album-collapse-btn { margin-left: auto; background-color: transparent; color: #6364ff; border: none; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.3s; }
-        .album-collapse-btn:hover { background: #f0f1ff; }
+        .album-collapse-btn { margin-left: auto; background-color: transparent; color: #3370ff; border: none; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.3s; }
+        .album-collapse-btn:hover { background: #e8f1ff; }
         .album-card.collapsed #album-grid,
         .album-card.collapsed #album-status { display: none; }
         /* 隐藏 Netlify 注入的推广小弹窗（Powered by Netlify / Build your own site） */
@@ -144,8 +150,10 @@
         /* 手机端适配 */
         @media (max-width: 640px) {
             body { margin: 10px auto; padding: 0 12px; }
+            .app-bar { padding: 8px 12px; margin-bottom: 14px; }
+            .app-bar-title { font-size: 14px; }
             .card { padding: 16px; margin-bottom: 14px; border-radius: 10px; }
-            h2 { font-size: 18px; }
+            h2 { font-size: 17px; }
             .compose-area .ql-editor { min-height: 110px; }
             .timeline-header button, .album-collapse-btn { width: 32px; height: 32px; }
             .tl-title-group { flex-basis: 100%; }
@@ -153,7 +161,7 @@
             .tl-mode-switch .tl-mode-btn { font-size: 11px; padding: 2px 10px; }
             .tl-search input { font-size: 14px; padding: 7px 10px; }
             .heatmap-row { gap: 8px; }
-            .heatmap-row h2 { flex-basis: 100%; font-size: 16px; }
+            .heatmap-row h2 { flex-basis: 100%; font-size: 15px; }
             .hm-right { gap: 8px; flex-wrap: wrap; }
             .hm-info { order: 3; flex-basis: 100%; font-size: 11px; }
             .hm-week { gap: 4px; }
@@ -168,6 +176,14 @@
     </style>
 </head>
 <body>
+
+<header class="app-bar">
+    <div>
+        <div class="app-bar-title">我的 Mastodon 客户端</div>
+        <div class="app-bar-sub">个人嘟文 · 仅自己可见</div>
+    </div>
+    <div class="app-bar-date" id="app-bar-date"></div>
+</header>
 
 <div class="card">
     <h2>发布嘟文</h2>
@@ -192,14 +208,14 @@
         </div>
         <div class="today-stats"><span class="dot"></span>今日已发布 <span class="num" id="today-count">…</span> 条</div>
         <div class="tl-actions">
-            <button id="collapse-btn" title="折叠"><img class="icon" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%236364ff'%20stroke-width='2.5'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M6%2015l6-6%206%206'/%3E%3C/svg%3E" alt="折叠" width="18" height="18"></button>
-            <button id="search-toggle-btn" title="搜索"><img class="icon" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201024%201024'%3E%3Cpath%20d='M490.666667%2053.333333c241.493333%200%20437.333333%20195.84%20437.333333%20437.333334%200%20109.226667-40.192%20209.066667-106.453333%20285.696l0.981333%200.853333%20138.752%20138.837333a32%2032%200%201%201-45.226667%2045.226667l-138.794666-138.752c-0.341333-0.298667-0.597333-0.64-0.853334-0.981333A435.456%20435.456%200%200%201%20490.666667%20928c-241.493333%200-437.333333-195.84-437.333334-437.333333S249.173333%2053.333333%20490.666667%2053.333333z%20m0%2064a373.333333%20373.333333%200%201%200%200%20746.666667%20373.333333%20373.333333%200%200%200%200-746.666667z'%20fill='%236364ff'/%3E%3C/svg%3E" alt="搜索" width="18" height="18"></button>
+            <button id="collapse-btn" title="折叠"><img class="icon" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%233370ff'%20stroke-width='2.5'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M6%2015l6-6%206%206'/%3E%3C/svg%3E" alt="折叠" width="18" height="18"></button>
+            <button id="search-toggle-btn" title="搜索"><img class="icon" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201024%201024'%3E%3Cpath%20d='M490.666667%2053.333333c241.493333%200%20437.333333%20195.84%20437.333333%20437.333334%200%20109.226667-40.192%20209.066667-106.453333%20285.696l0.981333%200.853333%20138.752%20138.837333a32%2032%200%201%201-45.226667%2045.226667l-138.794666-138.752c-0.341333-0.298667-0.597333-0.64-0.853334-0.981333A435.456%20435.456%200%200%201%20490.666667%20928c-241.493333%200-437.333333-195.84-437.333334-437.333333S249.173333%2053.333333%20490.666667%2053.333333z%20m0%2064a373.333333%20373.333333%200%201%200%200%20746.666667%20373.333333%20373.333333%200%200%200%200-746.666667z'%20fill='%233370ff'/%3E%3C/svg%3E" alt="搜索" width="18" height="18"></button>
             <button id="refresh-btn" title="刷新">⟳</button>
         </div>
     </div>
     <div class="tl-search" id="search-row">
         <input id="search-input" type="text" placeholder="搜索我发布的嘟文…" autocomplete="off">
-        <button id="search-btn" title="搜索"><img class="icon" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201024%201024'%3E%3Cpath%20d='M490.666667%2053.333333c241.493333%200%20437.333333%20195.84%20437.333333%20437.333334%200%20109.226667-40.192%20209.066667-106.453333%20285.696l0.981333%200.853333%20138.752%20138.837333a32%2032%200%201%201-45.226667%2045.226667l-138.794666-138.752c-0.341333-0.298667-0.597333-0.64-0.853334-0.981333A435.456%20435.456%200%200%201%20490.666667%20928c-241.493333%200-437.333333-195.84-437.333334-437.333333S249.173333%2053.333333%20490.666667%2053.333333z%20m0%2064a373.333333%20373.333333%200%201%200%200%20746.666667%20373.333333%20373.333333%200%200%200%200-746.666667z'%20fill='%236364ff'/%3E%3C/svg%3E" alt="搜索" width="18" height="18"></button>
+        <button id="search-btn" title="搜索"><img class="icon" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201024%201024'%3E%3Cpath%20d='M490.666667%2053.333333c241.493333%200%20437.333333%20195.84%20437.333333%20437.333334%200%20109.226667-40.192%20209.066667-106.453333%20285.696l0.981333%200.853333%20138.752%20138.837333a32%2032%200%201%201-45.226667%2045.226667l-138.794666-138.752c-0.341333-0.298667-0.597333-0.64-0.853334-0.981333A435.456%20435.456%200%200%201%20490.666667%20928c-241.493333%200-437.333333-195.84-437.333334-437.333333S249.173333%2053.333333%20490.666667%2053.333333z%20m0%2064a373.333333%20373.333333%200%201%200%200%20746.666667%20373.333333%20373.333333%200%200%200%200-746.666667z'%20fill='%233370ff'/%3E%3C/svg%3E" alt="搜索" width="18" height="18"></button>
     </div>
     <div id="timeline-list"></div>
 </div>
@@ -219,11 +235,13 @@
     <div class="album-header">
         <h2>我的相册</h2>
         <span class="album-count" id="album-count"></span>
-        <button id="album-collapse-btn" class="album-collapse-btn" title="折叠"><img class="icon" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%236364ff'%20stroke-width='2.5'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M6%2015l6-6%206%206'/%3E%3C/svg%3E" alt="折叠" width="18" height="18"></button>
+        <button id="album-collapse-btn" class="album-collapse-btn" title="折叠"><img class="icon" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%233370ff'%20stroke-width='2.5'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M6%2015l6-6%206%206'/%3E%3C/svg%3E" alt="折叠" width="18" height="18"></button>
     </div>
     <div id="album-grid" class="album-grid"></div>
     <p id="album-status" class="heatmap-status">正在加载相册…</p>
 </div>
+
+<footer class='page-footer'>数据经 Netlify Function 代理转发 · 仅自己可见</footer>
 
 <!-- 图片查看器 -->
 <div id="lightbox" class="lightbox" hidden>
@@ -310,6 +328,8 @@
     initApp();
 
     async function initApp() {
+        const appBarDate = document.getElementById('app-bar-date');
+        if (appBarDate) appBarDate.textContent = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short' });
         try {
             const res = await fetch('/.netlify/functions/proxy?path=accounts/verify_credentials')
             if (res.ok) {
@@ -410,8 +430,8 @@
     // 折叠 / 展开时间线
     const collapseBtn = document.getElementById('collapse-btn');
     const timelineCard = document.getElementById('timeline-card');
-    const COLLAPSE_UP = 'data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%236364ff%27%20stroke-width=%272.5%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27%3E%3Cpath%20d=%27M6%2015l6-6%206%206%27/%3E%3C/svg%3E';
-    const COLLAPSE_DOWN = 'data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%236364ff%27%20stroke-width=%272.5%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27%3E%3Cpath%20d=%27M6%209l6%206%206-6%27/%3E%3C/svg%3E';
+    const COLLAPSE_UP = 'data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%233370ff%27%20stroke-width=%272.5%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27%3E%3Cpath%20d=%27M6%2015l6-6%206%206%27/%3E%3C/svg%3E';
+    const COLLAPSE_DOWN = 'data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%233370ff%27%20stroke-width=%272.5%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27%3E%3Cpath%20d=%27M6%209l6%206%206-6%27/%3E%3C/svg%3E';
     collapseBtn.addEventListener('click', () => {
         const collapsed = timelineCard.classList.toggle('collapsed');
         collapseBtn.title = collapsed ? '展开' : '折叠';
@@ -470,8 +490,8 @@
                 }
                 if (shown === 0) {
                     timelineList.innerHTML = tlMode === 'today'
-                        ? "<p style='color:#888;'>今日暂无嘟文</p>"
-                        : "<p style='color:#888;'>暂无嘟文</p>";
+                        ? "<div class='tl-empty'>今日暂无嘟文</div>"
+                        : "<div class='tl-empty'>暂无嘟文</div>";
                     tlPage.hasMore = false;
                     return;
                 }
@@ -503,7 +523,7 @@
                 if (tlSentinel) tlSentinel.remove();
                 if (statuses.length === 0) {
                     tlPage.hasMore = false;
-                    timelineList.insertAdjacentHTML('beforeend', "<p style='color:#888;text-align:center;font-size:12px;'>没有更多了</p>");
+                    timelineList.insertAdjacentHTML('beforeend', "<div class='tl-empty'>没有更多了</div>");
                     return;
                 }
                 const todayStart = new Date();
@@ -517,7 +537,7 @@
                 }
                 if (shown === 0) {
                     tlPage.hasMore = false;
-                    timelineList.insertAdjacentHTML('beforeend', "<p style='color:#888;text-align:center;font-size:12px;'>没有更多了</p>");
+                    timelineList.insertAdjacentHTML('beforeend', "<div class='tl-empty'>没有更多了</div>");
                     return;
                 }
                 tlPage.maxId = statuses[statuses.length - 1].id;
